@@ -76,8 +76,35 @@ class MofNQuorum:
     @classmethod
     def All(cls, config, replicas):
         return MofNQuorum(replicas, len(replicas))
+class Client(ABC):
+    
+    @abstractmethod
+    def get_total_num_replicas(self):
+        pass
 
-class BftClient(ABC):
+    @abstractmethod
+    async def write_with_result(self, msg, seq_num=None, cid=None, pre_process=False, m_of_n_quorum=None,
+                    reconfiguration=False, corrupt_params={}, no_retries=False, result=1):
+        pass
+
+    @abstractmethod
+    async def write(self, msg, seq_num=None, cid=None, pre_process=False, m_of_n_quorum=None,
+                    reconfiguration=False, corrupt_params={}, no_retries=False, result=1):
+        """ A wrapper around sendSync for requests that mutate state """
+        pass
+
+    @abstractmethod
+    async def read(self, msg, seq_num=None, cid=None, m_of_n_quorum=None,
+                   reconfiguration=False, include_ro=False, corrupt_params={}, no_retries=False, result=1):
+        """ A wrapper around sendSync for requests that do not mutate state """
+        pass
+
+    @abstractmethod
+    async def sendSync(self, msg, read_only, seq_num=None, cid=None, pre_process=False, m_of_n_quorum=None, \
+        reconfiguration=False, include_ro=False, corrupt_params={}, no_retries=False, result=1):
+        pass
+
+class BftClient(Client):
     def __init__(self, config, replicas, ro_replicas=[]):
         self.config = config
         self.replicas = replicas
